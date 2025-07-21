@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hudební Vizualizér V2 – Starfleet Style</title>
+  <style>
+    :root {
+      --spacing-unit: 16px;
+      --primary-color: #2196F3; /* Modrá pro akcenty */
+      --secondary-color: #00ff80; /* Zelená pro další akcenty */
+      --accent-color: #ff2d55; /* Výrazná červená/růžová */
+      --background-dark: transparent;
+      --background-light: #1a1a1a; /* Pro prvky jako playlist */
+      --text-primary: #ffffff;
+      --text-secondary: #b3b3b3; /* Pro méně důležitý text */
+      --spacing-sm: 8px;  
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --font-main: 'Orbitron', 'Segoe UI', system-ui, sans-serif;
+      --font-text: 'Arial', sans-serif;
+      --scroll-glow: rgba(0, 212, 255, 0.5);
+      --scroll-brightness: 1;
+
+      /* ===== LCARS REŽIM - RGB paleta (5 barev pro přechody) ===== */
+      --lcars-color-1: rgb(139, 0, 0);      /* DarkRed*/
+      --lcars-color-2: rgb(255, 0, 0);    /* Red */
+      --lcars-color-3: rgb(255, 160, 122);    /* LightSalmon */
+      --lcars-color-4: rgb(255, 20, 147);      /* DeepPink */
+      --lcars-color-5: rgb(255, 165, 0);      /* Orange */
+      --lcars-color-6: rgb(255, 69, 0);    /* OrangeRed */
+      --lcars-color-7: rgb(255, 165, 0);      /* Orange */
+      /* ===== STARFLEET ČERVENÁ REŽIM - RGB paleta ===== */
+      --red-color-1:  rgb(160, 82, 45);
+      --red-color-2:  rgb(210, 105, 30);
+      --red-color-3:  rgb(0, 255, 255);
+      --red-color-4:  rgb(124, 252, 0);
+      --red-color-5:  rgb(148, 0, 211);
+      --red-color-6:  rgb(255, 255, 0);
+      --red-color-7:  rgb(255, 69, 0);
+      --red-color-8:  rgb(255, 20, 147);
+      --red-color-9:  rgb(255, 0, 0);
+      --red-color-10: rgb(255, 250, 250);
+        
+        
+      /* ===== NEXUS WAVE REŽIM - RGB duhová paleta ===== */
+      --nexus-color-1: rgb(139, 0, 0);      /* DarkRed*/
+      --nexus-color-2: rgb(255, 0, 0);    /* Red */
+      --nexus-color-3: rgb(255, 160, 122);    /* LightSalmon */
+      --nexus-color-4: rgb(255, 20, 147);      /* DeepPink */
+      --nexus-color-5: rgb(255, 165, 0);      /* Orange */
+      --nexus-color-6: rgb(255, 69, 0);    /* OrangeRed */
+      --nexus-color-7: rgb(255, 127, 80);      /* Coral */
+      --nexus-color-8: rgb(173, 255, 47);    /* GreenYellow */
+      --nexus-color-9: rgb(0, 255, 0);    /* Lime */
+      --nexus-color-10: rgb(123, 104, 238);      /* MediumSlateBlue */    
+      --nexus-speed: 30;                     /* Rychlost animace */
+    }
+      
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: 100vw;
+      background-color: var(--background-dark);
+      color: var(--text-primary);
+      font-family: var(--font-main);
+      text-align: center;
+      font-weight: bold;
+      overscroll-behavior: none;
+      box-sizing: border-box;
+      position: fixed;
+      top: 0;
+      left: 0;
+    }
+
+    canvas {
+      display: block;
+      z-index: 1; 
+      opacity: 0.8;
+      background-color: var(--background-dark);
+    }
+
+    #controls {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+      background: rgba(0,0,0,0.6);
+      padding: 10px;
+      border-radius: 10px;
+      color: white;
+    }
+
+    select, button {
+      background: black;
+      color: white;
+      border: 1px solid #888;
+      padding: 5px;
+      margin-top: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+      
+    .background-image-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
+    .background-image-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 1.0;
+    }
+
+    /* ===== NÁVOD PRO ÚPRAVU RGB BAREV ===== */
+    /*
+    
+    Jak si nastavit vlastní RGB barvy pro každý režim:
+    
+    RGB formát: rgb(červená, zelená, modrá) - každá hodnota 0-255
+    
+    1. LCARS REŽIM:
+       Nastav 5 barev (--lcars-color-1 až --lcars-color-5)
+       Příklad palety: rgb(255, 0, 0), rgb(0, 255, 0), atd.
+    
+    2. STARFLEET ČERVENÁ:
+       Nastav 5 odstínů červené/oranžové palety
+       Příklad: rgb(255, 100, 100) = světle červená
+    
+    3. NEXUS WAVE:
+       Nastav 6 duhových barev pro plynulý přechod
+       --nexus-speed: 10-100 (rychlost animace)
+    
+    Tip: Můžeš zkopírovat RGB hodnoty z jiných projektů!
+    Například z Adobe Color, Figma, nebo jakéhokoliv color pickeru.
+    
+    */
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <label for="theme">🎨 Téma:</label>
+    <select id="theme">
+      <option value="lcars">LCARS</option>
+      <option value="red">Starfleet Červená</option>
+      <option value="nexus">Nexus Wave</option>
+    </select>
+    <br />
+    <button onclick="togglePause()">⏯️ Pauza</button>
+  </div>
+
+  <div class="background-image-container">
+    <img src="https://img41.rajce.idnes.cz/d4102/19/19244/19244630_db82ad174937335b1a151341387b7af2/images/vnon-pozadi-od-admirala-chatbota..jpg?ver=0" />
+  </div>
+
+  <canvas id="visualizer"></canvas>
+
+  <script>
+    const canvas = document.getElementById('visualizer');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let paused = false;
+    const themeSelect = document.getElementById('theme');
+
+    // Přečtení CSS proměnných pro barvy z :root
+    const rootStyles = getComputedStyle(document.documentElement);
+
+    // Funkce pro získání CSS hodnoty jako číslo (pro nexus speed)
+    function getCSSValue(property) {
+      return parseFloat(rootStyles.getPropertyValue(property));
+    }
+
+    // Funkce pro získání RGB barvy z CSS proměnné
+    function getRGBColor(property) {
+      return rootStyles.getPropertyValue(property).trim();
+    }
+
+    // Funkce pro interpolaci mezi dvěma RGB barvami
+    function interpolateRGB(color1, color2, factor) {
+      // Extraktuj RGB hodnoty z CSS rgb() stringu
+      const extractRGB = (rgbString) => {
+        const match = rgbString.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+        return match ? [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])] : [0, 0, 0];
+      };
+      
+      const rgb1 = extractRGB(color1);
+      const rgb2 = extractRGB(color2);
+      
+        
+        
+      const r = Math.round(rgb1[0] + (rgb2[0] - rgb1[0]) * factor);
+      const g = Math.round(rgb1[1] + (rgb2[1] - rgb1[1]) * factor);
+      const b = Math.round(rgb1[2] + (rgb2[2] - rgb1[2]) * factor);
+      
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    // Témata přepracovaná pro RGB systém
+    const themes = {
+      lcars: (i, total) => {
+        // Palette z 5 barev definovaných v CSS
+        const colors = [
+          getRGBColor('--lcars-color-1'),
+          getRGBColor('--lcars-color-2'), 
+          getRGBColor('--lcars-color-3'),
+          getRGBColor('--lcars-color-4'),
+          getRGBColor('--lcars-color-5'),
+          getRGBColor('--lcars-color-6'),
+          getRGBColor('--lcars-color-7'), 
+            
+        ];
+        
+        // Výběr barvy podle pozice ve spektru
+        const colorIndex = (i / total) * (colors.length - 1);
+        const lowerIndex = Math.floor(colorIndex);
+        const upperIndex = Math.min(lowerIndex + 1, colors.length - 1);
+        const factor = colorIndex - lowerIndex;
+        
+        return interpolateRGB(colors[lowerIndex], colors[upperIndex], factor);
+      },
+      
+      red: (i, total) => {
+        const colors = [
+          getRGBColor('--red-color-1'),
+          getRGBColor('--red-color-2'),
+          getRGBColor('--red-color-3'),
+          getRGBColor('--red-color-4'),
+          getRGBColor('--red-color-5'),
+          getRGBColor('--red-color-6'),
+          getRGBColor('--red-color-7'),
+          getRGBColor('--red-color-8'),
+          getRGBColor('--red-color-9'),
+          getRGBColor('--red-color-10')  
+        ];
+        
+        // Cyklické procházení palety s jemnými přechody
+        const cyclePosition = (i * 0.8) % colors.length;
+        const lowerIndex = Math.floor(cyclePosition);
+        const upperIndex = (lowerIndex + 1) % colors.length;
+        const factor = cyclePosition - lowerIndex;
+        
+        return interpolateRGB(colors[lowerIndex], colors[upperIndex], factor);
+      },
+      
+      nexus: (i, total) => {
+        const colors = [
+          getRGBColor('--nexus-color-1'),
+          getRGBColor('--nexus-color-2'),
+          getRGBColor('--nexus-color-3'),
+          getRGBColor('--nexus-color-4'),
+          getRGBColor('--nexus-color-5'),
+          getRGBColor('--nexus-color-6'),
+          getRGBColor('--nexus-color-7'),
+          getRGBColor('--nexus-color-8'),
+          getRGBColor('--nexus-color-9'),
+          getRGBColor('--nexus-color-10')   
+        ];
+        
+        const speed = getCSSValue('--nexus-speed');
+        
+        // Animovaný přechod přes celou paletu
+        const timeOffset = Date.now() / (speed * 10);
+        const position = ((timeOffset + i * 0.3) % colors.length);
+        const lowerIndex = Math.floor(position);
+        const upperIndex = (lowerIndex + 1) % colors.length;
+        const factor = position - lowerIndex;
+        
+        return interpolateRGB(colors[lowerIndex], colors[upperIndex], factor);
+      }
+    };
+
+    let currentTheme = themes[themeSelect.value];
+
+    themeSelect.onchange = () => {
+      currentTheme = themes[themeSelect.value];
+    };
+
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        const audioCtx = new AudioContext();
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 1024;
+
+        source.connect(analyser);
+
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
+        function draw() {
+          if (paused) return requestAnimationFrame(draw);
+
+          analyser.getByteFrequencyData(dataArray);
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          const barWidth = canvas.width / bufferLength * 2.5;
+          let x = 0;
+
+          for (let i = 0; i < bufferLength; i++) {
+            const barHeight = dataArray[i];
+
+            ctx.fillStyle = currentTheme(i, bufferLength);
+            ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+            x += barWidth + 1;
+          }
+
+          requestAnimationFrame(draw);
+        }
+
+        draw();
+
+        window.addEventListener('resize', () => {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        });
+
+        window.togglePause = function togglePause() {
+          paused = !paused;
+          if (!paused) requestAnimationFrame(draw);
+        };
+
+      })
+      .catch(err => {
+        alert("⚠️ Přístup ke zvuku selhal: " + err.message);
+      });
+  </script>
+</body>
+</html>
